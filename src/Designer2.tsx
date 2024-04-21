@@ -11,7 +11,10 @@ import {
   generatePDF,
   downloadJsonFile,
 } from "./helper";
-const headerHeight = 65;
+
+import dotenv from 'dotenv';
+dotenv.config();
+// const headerHeight = 65;
 function App() {
   const designerRef = useRef<HTMLDivElement | null>(null);
   const designer = useRef<Designer | null>(null);
@@ -104,11 +107,11 @@ function App() {
   // Function to fetch PDF data from API and update base PDF in Designer
   const fetchDataAndStore = async (): Promise<string | null> => {
     const id = extractIdFromCurrentUrl();
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJCbG9ja3BlbiIsInN1YiI6IlVzZXIiLCJleHAiOjE3MTM3OTQwMzMsImlhdCI6MTcxMzcwNzYzMywidXNlcl9pZCI6MSwicm9sZSI6NCwicmFuZG9tX3NlY3JldCI6Ilx1ZmZmZFpcdWZmZmQtXHVmZmZkXHVmZmZkPVx1ZmZmZFVdJVxyIn0.97-UzyX0BpjD6Rkx3F7mmt9dcEApPLI2Sdccsghg4uk";
+    const token = "process.env.TOKEN";
     if (!id) return null;
 
     try {
-        const response = await fetch(`https://api.blockpen.xyz/api/v0/document/${id}/data`, {
+        const response = await fetch(`process.env.BASE_URL`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           }

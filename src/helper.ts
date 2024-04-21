@@ -159,11 +159,11 @@ export const isJsonString = (str: string) => {
 // }
 // const id = extractIdFromCurrentUrl();
 // console.log(id);
-// const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJCbG9ja3BlbiIsInN1YiI6IlVzZXIiLCJleHAiOjE3MTM3OTQwMzMsImlhdCI6MTcxMzcwNzYzMywidXNlcl9pZCI6MSwicm9sZSI6NCwicmFuZG9tX3NlY3JldCI6Ilx1ZmZmZFpcdWZmZmQtXHVmZmZkXHVmZmZkPVx1ZmZmZFVdJVxyIn0.97-UzyX0BpjD6Rkx3F7mmt9dcEApPLI2Sdccsghg4uk"
+// const token = "process.env.TOKEN"
 // GET request to Get the document 
 // async function fetchDataAndStore(): Promise<string | null> {
 //   try {
-//     const response = await fetch(`https://api.blockpen.xyz/api/v0/document/${id}/data`, {
+//     const response = await fetch(`process.env.BASE_URL`, {
 //       headers: {
 //         'Authorization': `Bearer ${token}`,
 //       }
