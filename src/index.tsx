@@ -16,7 +16,7 @@ root.render(
     <BrowserRouter>
       <Navigation />
       <Routes>
-        <Route path="/" element={<Designer />}></Route>
+        <Route path="/" element={<Designer2 />}></Route>
         <Route path="/form-viewer" element={<FormAndViewer />}></Route>
       </Routes>
     </BrowserRouter>

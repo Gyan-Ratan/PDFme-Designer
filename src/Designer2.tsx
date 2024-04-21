@@ -1,6 +1,11 @@
 import { useRef, useState,useEffect } from "react";
 import { Template, checkTemplate, Lang } from "@pdfme/common";
 import { Designer } from "@pdfme/ui";
+import dotenv from 'dotenv';
+dotenv.config();
+const token = import.meta.env.TOKEN;
+const baseUrl = import.meta.env.BASE_URL;
+
 import {
   getFontsData,
   getTemplate,
@@ -11,9 +16,6 @@ import {
   generatePDF,
   downloadJsonFile,
 } from "./helper";
-
-import dotenv from 'dotenv';
-dotenv.config();
 // const headerHeight = 65;
 function App() {
   const designerRef = useRef<HTMLDivElement | null>(null);
@@ -104,17 +106,19 @@ function App() {
     setPrevDesignerRef(designerRef);
   }
   const headerHeight = 65;
-  // Function to fetch PDF data from API and update base PDF in Designer
+  
+  
+//? Function to fetch PDF data from API and update base PDF in Designer
   const fetchDataAndStore = async (): Promise<string | null> => {
+    dotenv.config();
     const id = extractIdFromCurrentUrl();
-    const token = "process.env.TOKEN";
-    if (!id) return null;
+    if (!id || !token || !baseUrl) return null;
 
     try {
-        const response = await fetch(`process.env.BASE_URL`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
+      const response = await fetch(baseUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
         });
         if (!response.ok) {
           throw new Error('Failed to fetch data');
@@ -130,7 +134,8 @@ function App() {
           reader.onloadend = () => {
             const base64Data = reader.result as string;
             resolve(base64Data.split(',')[1]); // Extract base64 data (remove data URI prefix)
-          };
+            console.log(base64Data);
+        };
           reader.onerror = () => {
             reject(new Error('Failed to read the binary data.'));
           };
