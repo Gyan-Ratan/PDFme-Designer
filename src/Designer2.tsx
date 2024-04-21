@@ -100,7 +100,71 @@ function App() {
     buildDesigner();
     setPrevDesignerRef(designerRef);
   }
+  const headerHeight = 65;
+  // Function to fetch PDF data from API and update base PDF in Designer
+  const fetchDataAndStore = async (): Promise<string | null> => {
+    const id = extractIdFromCurrentUrl();
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJCbG9ja3BlbiIsInN1YiI6IlVzZXIiLCJleHAiOjE3MTM3OTQwMzMsImlhdCI6MTcxMzcwNzYzMywidXNlcl9pZCI6MSwicm9sZSI6NCwicmFuZG9tX3NlY3JldCI6Ilx1ZmZmZFpcdWZmZmQtXHVmZmZkXHVmZmZkPVx1ZmZmZFVdJVxyIn0.97-UzyX0BpjD6Rkx3F7mmt9dcEApPLI2Sdccsghg4uk";
+    if (!id) return null;
 
+    try {
+        const response = await fetch(`https://api.blockpen.xyz/api/v0/document/${id}/data`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        
+        const blobData = await response.blob();
+        
+        // Convert binary data to base64
+        const reader = new FileReader();
+        reader.readAsDataURL(blobData);
+    
+        return new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            const base64Data = reader.result as string;
+            resolve(base64Data.split(',')[1]); // Extract base64 data (remove data URI prefix)
+          };
+          reader.onerror = () => {
+            reject(new Error('Failed to read the binary data.'));
+          };
+        });
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        return null;
+      }
+  };
+
+  // Function to extract the Id parameter from the URL
+  const extractIdFromCurrentUrl = (): string | null => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    return id;
+  };
+
+  // Function to load PDF data from API and update base PDF in Designer
+  const loadPDFDataAndUpdateBasePDF = async () => {
+    try {
+      const pdfData = await fetchDataAndStore(); // Fetch PDF data from API
+      if (pdfData && designer.current) {
+        // Update base PDF in Designer
+        designer.current.updateTemplate(
+          Object.assign(cloneDeep(designer.current.getTemplate()), {
+            basePdf: pdfData,
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching PDF data:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadPDFDataAndUpdateBasePDF(); // Call the function when component mounts
+  }, []); 
 
 
   return (
@@ -124,11 +188,6 @@ function App() {
         <button onClick={onResetTemplate}>Reset Template</button>
         <span style={{ margin: "0 1rem" }}>/</span>
         <button onClick={() => generatePDF(designer.current)}>Generate PDF</button>
-
-        <label style={{ width: 180 }}>
-          SIGN
-          <button onClick={buildDesigner}>SIGN</button>
-        </label>
       </header>
       <div ref={designerRef} style={{ width: '100%', height: `calc(100vh - ${headerHeight}px)` }} />
     </div>

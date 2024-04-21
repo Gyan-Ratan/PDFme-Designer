@@ -5,4 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   build: { target: 'esnext' },
   plugins: [react()],
+  server: {
+    port: 3000 // Change this to the desired port number
+  }
 });
