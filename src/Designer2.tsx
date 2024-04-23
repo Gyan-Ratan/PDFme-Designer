@@ -1,10 +1,12 @@
 import { useRef, useState,useEffect } from "react";
 import { Template, checkTemplate, Lang } from "@pdfme/common";
-import { Designer } from "@pdfme/ui";
-import dotenv from 'dotenv';
-dotenv.config();
-const token = import.meta.env.TOKEN;
-const baseUrl = import.meta.env.BASE_URL;
+// import { Designer } from "@pdfme/ui";
+import { Designer, Form, Viewer } from '@pdfme/ui';
+// import dotenv from 'dotenv';
+// dotenv.config();
+// const token = import.meta.env.TOKEN;
+const token ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJCbG9ja3BlbiIsInN1YiI6IlVzZXIiLCJleHAiOjE3MTM4ODA4NDEsImlhdCI6MTcxMzc5NDQ0MSwidXNlcl9pZCI6OCwicm9sZSI6NCwicmFuZG9tX3NlY3JldCI6Ilx1ZmZmZFx1ZmZmZFx1ZmZmZFFlXHUwMDA1XHVmZmZkczRcdWZmZmQqWyJ9.Lgd55dzHv-IApXJ2_FU7QK8lvtRGGdGXTJ4TD87UeE0"
+const baseUrl = "https://api.blockpen.xyz/api/v0/document"
 
 import {
   getFontsData,
@@ -12,16 +14,25 @@ import {
   readFile,
   cloneDeep,
   getPlugins,
-  handleLoadTemplate,
-  generatePDF,
+  // handleLoadTemplate,
+  // generatePDF,
   downloadJsonFile,
 } from "./helper";
 // const headerHeight = 65;
+// interface SignatureData {
+//   x: number;
+//   y: number;
+//   imageData: string;
+// }
+// const secondPartySignatures: SignatureData[] = [];
+
 function App() {
+
   const designerRef = useRef<HTMLDivElement | null>(null);
   const designer = useRef<Designer | null>(null);
   const [lang, setLang] = useState<Lang>('en');
   const [prevDesignerRef, setPrevDesignerRef] = useState<Designer | null>(null);
+  const [pdfFileData, setPdfFileData] = useState<string | null>(null);
   const buildDesigner = () => {
     let template: Template = getTemplate();
     try {
@@ -30,6 +41,9 @@ function App() {
         ? JSON.parse(templateString)
         : getTemplate();
       checkTemplate(templateJson);
+      
+      // const sampleData: { [key: string]: string }[] = templateJson.sampledata;
+      // console.log(sampleData)
       template = templateJson as Template;
     } catch {
       localStorage.removeItem("template");
@@ -44,12 +58,13 @@ function App() {
             lang,
             labels: {
               addNewField: 'ADD ELEMENT', // Update existing labels
+              addSign:'ADD Sign',
               'clear': '🗑️', // Add custom labels to consume them in your own plugins
             },
             
             theme: {
               token: {
-                colorPrimary: '#5cb1ff',
+                colorPrimary: '#006fee',
               },
             },
           },
@@ -59,7 +74,15 @@ function App() {
       }
     });
   }
-
+  const onSaveTemplate = (template?: Template) => {
+    if (designer.current) {
+      localStorage.setItem(
+        "template",
+        JSON.stringify(template || designer.current.getTemplate())
+      );
+      alert("Saved!");
+    }
+  };
   const onChangeBasePDF = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target && e.target.files) {
       readFile(e.target.files[0], "dataURL").then(async (basePdf) => {
@@ -74,29 +97,6 @@ function App() {
     }
   };
 
-  const onDownloadTemplate = () => {
-    if (designer.current) {
-      downloadJsonFile(designer.current.getTemplate(), "template");
-      console.log(designer.current.getTemplate());
-    }
-  };
-
-  const onSaveTemplate = (template?: Template) => {
-    if (designer.current) {
-      localStorage.setItem(
-        "template",
-        JSON.stringify(template || designer.current.getTemplate())
-      );
-      alert("Saved!");
-    }
-  };
-
-  const onResetTemplate = () => {
-    if (designer.current) {
-      designer.current.updateTemplate(getTemplate());
-      localStorage.removeItem("template");
-    }
-  };
 
   if (designerRef != prevDesignerRef) {
     if (prevDesignerRef && designer.current) {
@@ -110,12 +110,13 @@ function App() {
   
 //? Function to fetch PDF data from API and update base PDF in Designer
   const fetchDataAndStore = async (): Promise<string | null> => {
-    dotenv.config();
+
     const id = extractIdFromCurrentUrl();
     if (!id || !token || !baseUrl) return null;
 
     try {
-      const response = await fetch(baseUrl, {
+      const response = await fetch(`${baseUrl}/${id}/data`, {
+        "method": "GET",
         headers: {
           'Authorization': `Bearer ${token}`,
         }
@@ -123,18 +124,22 @@ function App() {
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
-        
+        // console.log(response)
         const blobData = await response.blob();
-        
+       
+        const pdfBlob = new Blob([blobData], { type: 'application/pdf' });
         // Convert binary data to base64
+       
         const reader = new FileReader();
-        reader.readAsDataURL(blobData);
+        reader.readAsDataURL(pdfBlob);
     
         return new Promise<string>((resolve, reject) => {
           reader.onloadend = () => {
             const base64Data = reader.result as string;
-            resolve(base64Data.split(',')[1]); // Extract base64 data (remove data URI prefix)
-            console.log(base64Data);
+            resolve(base64Data); // Extract base64 data (remove data URI prefix)
+            // console.log(base64Data);
+
+            setPdfFileData(base64Data);
         };
           reader.onerror = () => {
             reject(new Error('Failed to read the binary data.'));
@@ -145,6 +150,11 @@ function App() {
         return null;
       }
   };
+  useEffect(() => {
+
+   fetchDataAndStore(); 
+  }, []);
+
 
   // Function to extract the Id parameter from the URL
   const extractIdFromCurrentUrl = (): string | null => {
@@ -156,12 +166,13 @@ function App() {
   // Function to load PDF data from API and update base PDF in Designer
   const loadPDFDataAndUpdateBasePDF = async () => {
     try {
-      const pdfData = await fetchDataAndStore(); // Fetch PDF data from API
-      if (pdfData && designer.current) {
+      // const pdfData = await fetchDataAndStore(); // Fetch PDF data from API
+      // console.log(pdfFileData)
+      if (pdfFileData && designer.current) {
         // Update base PDF in Designer
         designer.current.updateTemplate(
           Object.assign(cloneDeep(designer.current.getTemplate()), {
-            basePdf: pdfData,
+            basePdf: pdfFileData,
           })
         );
       }
@@ -170,32 +181,18 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    loadPDFDataAndUpdateBasePDF(); // Call the function when component mounts
-  }, []); 
 
+    loadPDFDataAndUpdateBasePDF(); // Call the function when component mounts
+
+    const PatchSignature= () => {
+        console.log("SUBMITTED")
+    }
 
   return (
     <div>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginRight: 120, }}>
-        {/* <span style={{ margin: "0 1rem" }}>/</span> */}
-        <label style={{ width: 180 }}>
-          Change BasePDF
-          <input type="file" accept="application/pdf" onChange={onChangeBasePDF} />
-        </label>
-        <span style={{ margin: "0 1rem" }}>/</span>
-        <label style={{ width: 180 }}>
-          Load Template
-          <input type="file" accept="application/json" onChange={(e) => handleLoadTemplate(e, designer.current)} />
-        </label>
-        <span style={{ margin: "0 1rem" }}>/</span>
-        <button onClick={onDownloadTemplate}>Download Template</button>
-        <span style={{ margin: "0 1rem" }}>/</span>
-        <button onClick={() => onSaveTemplate()}>Save Template</button>
-        <span style={{ margin: "0 1rem" }}>/</span>
-        <button onClick={onResetTemplate}>Reset Template</button>
-        <span style={{ margin: "0 1rem" }}>/</span>
-        <button onClick={() => generatePDF(designer.current)}>Generate PDF</button>
+        <span style={{ margin: "0 1rem" }}></span>
+        <button onClick={() => PatchSignature()}>Submit Signature</button>
       </header>
       <div ref={designerRef} style={{ width: '100%', height: `calc(100vh - ${headerHeight}px)` }} />
     </div>

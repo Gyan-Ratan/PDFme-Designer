@@ -85,7 +85,8 @@ function App() {
       const inputs = ui.current.getInputs();
       alert(JSON.stringify(inputs, null, 2));
       alert("Dumped as console.log");
-      console.log(inputs);
+      // console.log(inputs);
+      console.log(inputs[0])
     }
   };
 
