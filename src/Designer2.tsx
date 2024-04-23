@@ -228,9 +228,14 @@ function App() {
     };
   return (
     <div>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginRight: 120, }}>
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginRight: 120, backgroundColor:"#4a4a4a" }}>
         <span style={{ margin: "0 1rem" }}></span>
-        <button className="bubbly-button" onClick={() => sendSignRequest(datsa)}>Accept Signature</button>
+        <div><button className="bubbly-button" onClick={() => sendSignRequest(datsa)}>Accept Contract</button>
+        <span style={{ margin: "0 1rem" }}></span>
+        <button className="bubbly-button redColor" onClick={() => sendSignRequest(datsa)}>Reject Contract</button>
+
+        </div>
+         <span style={{ margin: "0 1rem" }}></span>
       </header>
       <div ref={designerRef} style={{ width: '100%', height: `calc(100vh - ${headerHeight}px)` }} />
     </div>
