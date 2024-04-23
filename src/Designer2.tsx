@@ -1,12 +1,10 @@
 import { useRef, useState,useEffect } from "react";
 import { Template, checkTemplate, Lang } from "@pdfme/common";
-// import { Designer } from "@pdfme/ui";
+import "./index.css";
+import axios, { AxiosResponse, AxiosError } from 'axios';
 import { Designer, Form, Viewer } from '@pdfme/ui';
-// import dotenv from 'dotenv';
-// dotenv.config();
-// const token = import.meta.env.TOKEN;
 
-
+let globalValue: number;
 import {
   getFontsData,
   getTemplate,
@@ -15,7 +13,7 @@ import {
   getPlugins,
   // handleLoadTemplate,
   // generatePDF,
-  downloadJsonFile,
+  // downloadJsonFile,
 } from "./helper";
 // const headerHeight = 65;
 // interface SignatureData {
@@ -183,15 +181,56 @@ function App() {
 
     loadPDFDataAndUpdateBasePDF(); // Call the function when component mounts
 
-    const PatchSignature= () => {
-        console.log("SUBMITTED")
-    }
 
+
+    //? SUBMIT SIGN BUTTON
+    async function sendSignRequest(data: object): Promise<void> {
+      try {
+        const id = extractIdFromCurrentUrl();
+        const response: AxiosResponse = await axios.patch(`${baseUrl}/${id}/sign`, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+    
+        console.log('PATCH request successfully sent:', response.data);
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          console.error('Error sending PATCH request:', axiosError.response.data);
+        } else {
+          console.error('Error sending PATCH request:', error.message);
+        }
+      }
+    }
+    const animateButton = (e: MouseEvent) => {
+      e.preventDefault();
+      const target = e.target as HTMLElement;
+      // Reset animation
+      target.classList.remove('animate');
+      // Trigger animation
+      target.classList.add('animate');
+      setTimeout(() => {
+        target.classList.remove('animate');
+      }, 700);
+    };
+    const datsa = {
+      sign_image: {
+        cords: {
+          x0: 200,
+          y0: 200,
+          x1: 300,
+          y1: 300
+        },
+        data: "sdsdsd"
+      }
+    };
   return (
     <div>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginRight: 120, }}>
         <span style={{ margin: "0 1rem" }}></span>
-        <button onClick={() => PatchSignature()}>Submit Signature</button>
+        <button className="bubbly-button" onClick={() => sendSignRequest(datsa)}>Accept Signature</button>
       </header>
       <div ref={designerRef} style={{ width: '100%', height: `calc(100vh - ${headerHeight}px)` }} />
     </div>
