@@ -5,8 +5,7 @@ import { Designer, Form, Viewer } from '@pdfme/ui';
 // import dotenv from 'dotenv';
 // dotenv.config();
 // const token = import.meta.env.TOKEN;
-const token ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJCbG9ja3BlbiIsInN1YiI6IlVzZXIiLCJleHAiOjE3MTM4ODA4NDEsImlhdCI6MTcxMzc5NDQ0MSwidXNlcl9pZCI6OCwicm9sZSI6NCwicmFuZG9tX3NlY3JldCI6Ilx1ZmZmZFx1ZmZmZFx1ZmZmZFFlXHUwMDA1XHVmZmZkczRcdWZmZmQqWyJ9.Lgd55dzHv-IApXJ2_FU7QK8lvtRGGdGXTJ4TD87UeE0"
-const baseUrl = "https://api.blockpen.xyz/api/v0/document"
+
 
 import {
   getFontsData,
